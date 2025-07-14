@@ -6,7 +6,7 @@ function Measurements.MeasureCurrentZone()
     local zone_id, x, y, z = GetUnitRawWorldPosition("player")
     local map_id = GetCurrentMapId()
 
-    -- d(string.format("Measuring zone %d, map id %d", zone_id, map_id))
+    d(string.format("Measuring zone %d, map id %d", zone_id, map_id))
 
     local nX1, nZ1 = GetRawNormalizedWorldPosition(zone_id, -D, y, -D)
     local nX2, nZ2 = GetRawNormalizedWorldPosition(zone_id,  D, y,  D)
@@ -16,17 +16,16 @@ function Measurements.MeasureCurrentZone()
     local scaleZ  = (nZ2 - nZ1) / (2 * D)
     local offsetZ = (nZ2 + nZ1) / 2
 
+    local zeroX = -offsetX / scaleX
+    local oneX  = (1 - offsetX) / scaleX
+    local zeroZ = -offsetZ / scaleZ
+    local oneZ  = (1 - offsetZ) / scaleZ
+
     local xC = x * scaleX + offsetX
     local zC = z * scaleZ + offsetZ
-    -- d(string.format("Player position normalized: x=%.3f, z=%.3f", xC, zC))
-
-    local zeroX = offsetX 
-    local zeroZ = offsetZ
-    local oneX  = 1 * scaleX + offsetX
-    local oneZ  = 1 * scaleZ + offsetZ
-
-    -- d(string.format("Normalized (0,0): x=%.3f, z=%.3f", zeroX, zeroZ))
-    -- d(string.format("Normalized (1,1): x=%.3f, z=%.3f", oneX, oneZ))
+    d(string.format("Player position normalized: x=%.3f, z=%.3f", xC, zC))
+    d(string.format("Normalized (0,0): x=%.3f, z=%.3f", zeroX, zeroZ))
+    d(string.format("Normalized (1,1): x=%.3f, z=%.3f", oneX, oneZ))
 
     Measurements.savedVars[zone_id] = Measurements.savedVars[zone_id] or {}
     Measurements.savedVars[zone_id][map_id] = {
