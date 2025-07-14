@@ -52,6 +52,29 @@ end
 
 local CheckCurrentZoneForMeasurements = Measurements.CheckCurrentZoneForMeasurements
 
+function Measurements.DumpMapData()
+    Measurements.savedVars["Dump"] = Measurements.savedVars["Dump"] or {}
+    
+    for mapId = 0, 3000 do
+        local tile_count = GetMapNumTilesForMapId(mapId)
+        local name = GetMapNameById(mapId)
+        if name and name ~= "" and tile_count and tile_count > 0 then
+            local mapEntry = {
+                name = name,
+                tileCount = tile_count,
+                tiles = {}
+            }
+
+            for tileIndex = 1, tile_count do
+                local texture = GetMapTileTextureForMapId(mapId, tileIndex)
+                table.insert(mapEntry.tiles, texture)
+            end
+
+            Measurements.savedVars["Dump"][mapId] = mapEntry
+        end
+    end
+end
+
 local function Init(event, name)
     if name ~= "Measurements" then return end
     EVENT_MANAGER:UnregisterForEvent("Measurements", EVENT_ADD_ON_LOADED)
