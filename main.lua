@@ -2,11 +2,13 @@ Measurements = Measurements or {}
 
 local D = 2e6
 
-function Measurements.MeasureCurrentZone()
-    local zone_id, x, y, z = GetUnitRawWorldPosition("player")
-    local map_id = GetCurrentMapId()
+function Measurements.MeasureZone(zone_id, mapId)
+    if not zone_id or not mapId then
+        return
+    end
+    local _, x, y, z = GetUnitRawWorldPosition("player")
 
-    d(string.format("Measuring zone %d, map id %d", zone_id, map_id))
+    
 
     local nX1, nZ1 = GetRawNormalizedWorldPosition(zone_id, -D, y, -D)
     local nX2, nZ2 = GetRawNormalizedWorldPosition(zone_id,  D, y,  D)
@@ -23,16 +25,17 @@ function Measurements.MeasureCurrentZone()
 
     local xC = x * scaleX + offsetX
     local zC = z * scaleZ + offsetZ
-    d(string.format("Player position normalized: x=%.3f, z=%.3f", xC, zC))
-    d(string.format("Normalized (0,0): x=%.3f, z=%.3f", zeroX, zeroZ))
-    d(string.format("Normalized (1,1): x=%.3f, z=%.3f", oneX, oneZ))
+    -- d(string.format("Player position normalized: x=%.3f, z=%.3f", xC, zC))
+    -- d(string.format("Normalized (0,0): x=%.3f, z=%.3f", zeroX, zeroZ))
+    -- d(string.format("Normalized (1,1): x=%.3f, z=%.3f", oneX, oneZ))
 
     Measurements.savedVars[zone_id] = Measurements.savedVars[zone_id] or {}
-    Measurements.savedVars[zone_id][map_id] = {
+    Measurements.savedVars[zone_id][mapId] = {
         scaleX  = scaleX,
         offsetX = offsetX,
         scaleZ  = scaleZ,
         offsetZ = offsetZ,
+        y = y,
         zero    = { x = zeroX, z = zeroZ },
         one     = { x = oneX,  z = oneZ  }
     }
@@ -41,38 +44,43 @@ end
 
 function Measurements.CheckCurrentZoneForMeasurements()
     SetMapToPlayerLocation() -- very necessary, otherwise map can be stuck even after loading screen
-    local zone_id, _, _, _ = GetUnitRawWorldPosition("player")
-    local map_id = GetCurrentMapId()
-    -- d(string.format("Checking zone %d, map id %d", zone_id, map_id))
-
-    Measurements.savedVars[zone_id] = Measurements.savedVars[zone_id] or {}
-    if not Measurements.savedVars[zone_id][map_id] then Measurements:MeasureCurrentZone() end
+    local zone_id, x, y, z = GetUnitRawWorldPosition("player")
+    local mapId = GetCurrentMapId()
+    Measurements.MeasureZone(zone_id, mapId)
 end
 
 local CheckCurrentZoneForMeasurements = Measurements.CheckCurrentZoneForMeasurements
 
-function Measurements.DumpMapData()
-    Measurements.savedVars["Dump"] = Measurements.savedVars["Dump"] or {}
+-- function Measurements.DumpMapData()
+--     Measurements.savedVars["Dump"] = Measurements.savedVars["Dump"] or {}
     
-    for mapId = 0, 3000 do
-        local tile_count = GetMapNumTilesForMapId(mapId)
-        local name = GetMapNameById(mapId)
-        if name and name ~= "" and tile_count and tile_count > 0 then
-            local mapEntry = {
-                name = name,
-                tileCount = tile_count,
-                tiles = {}
-            }
+--     for mapId = 0, 3000 do
+--         local tile_count = GetMapNumTilesForMapId(mapId)
+--         local name = GetMapNameById(mapId)
+--         local name, map_type, map_content_type, zone_index, description = GetMapInfoById(mapId)
+--         local zone_id = GetZoneId(zone_index)
+--         if type(zone_id) ~= "number" or type(mapId) ~= "number" then
+--             d(string.format("Invalid: zone_id: %s, mapId: %s", tostring(zone_id), tostring(mapId)))
+--             return
+--         end
+--         if name and name ~= "" and tile_count and tile_count > 0 and zone_id and mapId then
+--             Measurements.MeasureZone(zone_id, mapId)
+--             local mapEntry = {
+--                 name = name,
+--                 zone_id = zone_id,
+--                 tileCount = tile_count,
+--                 tiles = {}
+--             }
 
-            for tileIndex = 1, tile_count do
-                local texture = GetMapTileTextureForMapId(mapId, tileIndex)
-                table.insert(mapEntry.tiles, texture)
-            end
+--             for tileIndex = 1, tile_count*tile_count do
+--                 local texture = GetMapTileTextureForMapId(mapId, tileIndex)
+--                 table.insert(mapEntry.tiles, texture)
+--             end
 
-            Measurements.savedVars["Dump"][mapId] = mapEntry
-        end
-    end
-end
+--             Measurements.savedVars["Dump"][mapId] = mapEntry
+--         end
+--     end
+-- end
 
 local function Init(event, name)
     if name ~= "Measurements" then return end
